@@ -3,6 +3,7 @@
 #	2- FIFO para escrever ou contador
 #	3- a = c/l
 #	4- n = c/l*a 
+
 import sys
 
 
@@ -21,6 +22,11 @@ class Validation():
 		self.linhas = lista_linhas
 
 	def createOutput():
+		# - Descrição de toda a hierarquia de memória, com dados de capacidade, associatividade e
+		#tamanho de linhas de cada nível de cache, tamanho da memória RAM e da memória virtual,
+		#além do tamanho das páginas.
+		# - Número total de hits para cada nível (variando de 1 a 5 conforme retorno de getData).
+		# - Número total de erros (dos tipos -1 ou -2 conforme retorno de getData).
 		output = " "
 		return output
 
@@ -56,6 +62,7 @@ class Validation():
 
 	def duplicateSACache(self, SACache):
 		pass
+
 	###  Cache  ###
 	def createCache(self, l1d,l1i,l2,l3):
 		return Cache(l1d, l1i, l2, l3)
@@ -69,6 +76,7 @@ class Validation():
 		pass
 	def duplicateCache(self, c):
 		pass
+
 	### Main Memory ###
 	def createMainMemory(self, ramsize, vmsize):
 		return MainMemory(ramsize, vmsize)
@@ -80,6 +88,7 @@ class Validation():
 		pass
 	def setMainMemoryData(self, mem, address, value):
 		pass
+
 	### Memory ###
 	def createMemory(self, c, mem):
 		return Memory(c, mem)
@@ -93,6 +102,7 @@ class Validation():
 		pass
 	def duplicateMemory(self, mem):
 		pass
+
 	### Processor ###
 	def createProcessor(self, mem, ncores):
 		return Processor(mem, ncores)
@@ -102,7 +112,6 @@ class TACache():
 		self.capacity = c
 		self.line_size = l
 		self.associacao = c/l
-
 	
 class SACache():
 	def __init__(self, c, a, l):
