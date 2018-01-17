@@ -1,11 +1,13 @@
 #TODO:
-# 	1- Comparacao das tags com operadores logicos 
-#	2- FIFO para escrever ou contador
-#	3- a = c/l
-#	4- n = c/l*a 
+# 	1 - Comparacao das tags com operadores logicos 
+#	2 - FIFO para escrever ou contador
+#	3 - a = c/l
+#	4 - n = c/l*a 
+#	5 - Caches inclusivos
+#	6 - Politica de escrita: Write-through
 
 import sys
-
+import copy
 
 class Validation():
 	def __init__(self):
@@ -15,18 +17,21 @@ class Validation():
 		self.countMiss = 0
 		self.countHit = 0
 		self.linhas = []
-		nome_arquivo = sys.argv[1]
-		arquivo = open(nome_arquivo, 'r')
-		lista_linhas = arquivo.readlines()
-		arquivo.close()
-		self.linhas = lista_linhas
+		fileName = sys.argv[1]
+		file = open(fileName, 'r')
+		lines_list = file.readlines()
+		file.close()
+		self.lines = lines_list
 
-	def createOutput():
-		# - Descrição de toda a hierarquia de memória, com dados de capacidade, associatividade e
-		#tamanho de linhas de cada nível de cache, tamanho da memória RAM e da memória virtual,
-		#além do tamanho das páginas.
-		# - Número total de hits para cada nível (variando de 1 a 5 conforme retorno de getData).
-		# - Número total de erros (dos tipos -1 ou -2 conforme retorno de getData).
+	def doInstruction(self, ins, par1, par2):
+		pass
+
+	def createOutput(self):
+		# - Descricao de toda a hierarquia de memoria, com dados de capacidade, associatividade e
+		#	tamanho de linhas de cada nivel de cache, tamanho da memoria RAM e da memoria virtual,
+		#	alem do tamanho das paginas.
+		# - Numero total de hits para cada nivel (variando de 1 a 5 conforme retorno de getData).
+		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
 		output = " "
 		return output
 
@@ -41,14 +46,14 @@ class Validation():
 		return TACache.line_size
 
 	def getTACacheData(self, TACache, adress, value):
-		return False
+		pass
 
 	def setTACacheData(self, TACache, adress, value):
-		return False
+		pass
 
 	###  SACache  ###
 	def createSACache(self, c, a, l):
-		return Cache(c, a, l)
+		return SACache(c, a, l)
 	def getSACacheCapacity(self, SACache):
 		pass
 	def getSACacheLineSize(self, SACache):
@@ -111,15 +116,22 @@ class TACache():
 	def __init__(self, c, l):
 		self.capacity = c
 		self.line_size = l
-		self.associacao = c/l
+		self.assoc = c/l
 	
 class SACache():
 	def __init__(self, c, a, l):
-		pass
+		self.blocks = []
+		for i in range (0, c/l*a):
+			self.blocks.append(TACache(c,l))
+		self.tag = 0
+		self.offset = 0
 		
 class Cache():
 	def __init__(self, l1d, l1i, l2, l3):
-		pass
+		self.l1d = copy.deepcopy(l1d)
+		self.l1i = copy.deepcopy(l1i)
+		self.l2 = copy.deepcopy(l2)
+		self.l3 = l3
 
 class MainMemory():
 	def __init__(self, ramsize, vmsize):
@@ -127,17 +139,29 @@ class MainMemory():
 
 class Memory():
 	def __init__(self, c, mem):
-		pass
+		self.cache = c
+		self.memory = mem
 
 class Processor():
 	def __init__(self, mem, ncores):
-		pass
-
+		self.memory = []
+		self.ncores = ncores
+		for i in range(0,ncores):
+			self.memory.append(mem)
 
 if __name__ == "__main__":
 	v = Validation()
-	print v.linhas
-	print v.linhas[0].split()
+	ins = []
+
+	while len(v.lines) > 0:
+		ins = v.lines[0].split()
+		v.doInstruction(ins[0],ins[1],ins[2])
+		v.lines.remove(v.lines[0])
+	
 	ta = v.createTACache(10,2)
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
+	sa = v.createSACache(10,2,2)
+	print v.getTACacheCapacity(sa.blocks[1])
+	print v.getTACacheCapacity(sa.blocks[2])
+
