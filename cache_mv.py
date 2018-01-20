@@ -1,4 +1,5 @@
 #TODO:
+# 	tinyurl.com/ydhcvqy3
 # 	1 - Comparacao das tags com operadores logicos 
 #	2 - FIFO para escrever ou contador
 #	3 - a = c/l
@@ -8,6 +9,11 @@
 
 import sys
 import copy
+import Queue as q
+import math as m
+
+class Pow2Error(Exception):
+	pass
 
 class Validation():
 	def __init__(self):
@@ -45,24 +51,45 @@ class Validation():
 	def getTACacheLineSize(self, TACache):
 		return TACache.line_size
 
-	def getTACacheData(self, TACache, adress, value):
-		pass
+	def getTACacheData(self, TACache, address, value):
+		_offset = self.getOffset(address, TACache.offset_size)	
+		_tag = address - _offset
+		for addr in TACache.tag:
+			if addr == _tag:
+				#getValue() -> Pegar value
+				return True, value 
+		return False, value
+
+	def getOffset(self, address, offset):	#Por enquanto ta pegando na gambiarra
+		o = address << offset
+		o = bin(o)
+		o = list(o)
+		for i in range(0,offset):
+			del(o[2])
+		o = ''.join(o)
+		o = int(o,2)
+		return o >> offset
 
 	def setTACacheData(self, TACache, adress, value):
-		pass
+		if TACache.tag.full():	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
+			TACache.tag.get()
+			TACache.tag.put("")
+		else:
+			TACache.tag.put(value)
+			
 
 	###  SACache  ###
 	def createSACache(self, c, a, l):
 		return SACache(c, a, l)
 	def getSACacheCapacity(self, SACache):
-		pass
+		return SACache.capacity
 	def getSACacheLineSize(self, SACache):
-		pass
+		return SACache.line_size
 
-	def getSACacheData(self, SACache, adress, value):
-		pass
+	def getSACacheData(self, SACache, address, value):
+		return  True, value
 
-	def setSACacheData(self, SACache, adress, value):
+	def setSACacheData(self, SACache, address, value):
 		pass
 
 	def duplicateSACache(self, SACache):
@@ -73,11 +100,11 @@ class Validation():
 		return Cache(l1d, l1i, l2, l3)
 	def getCacheData(self, c, adress, value):
 		pass
-	def getCacheInstruction(self, c, adress, value):
+	def getCacheInstruction(self, c, address, value):
 		pass
-	def setCacheData(self, c, adress, value):
+	def setCacheData(self, c, address, value):
 		pass
-	def setCacheInstruction(self, c, adress, value):
+	def setCacheInstruction(self, c, address, value):
 		pass
 	def duplicateCache(self, c):
 		pass
@@ -114,18 +141,37 @@ class Validation():
 
 class TACache():
 	def __init__(self, c, l):
+		if (str.count(bin(c),"1") != 1):			# Fazer função melhor
+			raise Pow2Error("Capacity isn't a power of two")
+		if (str.count(bin(l),"1") != 1):
+			raise Pow2Error("Line size isn't a power of two")
+		self.miss = 0
+		self.hit = 0
+		self.offset_size = m.log(l,2)
 		self.capacity = c
 		self.line_size = l
 		self.assoc = c/l
+		self.tag = q.Queue()	# Fila - FIFO
+		self.lines = []
+        
 	
 class SACache():
 	def __init__(self, c, a, l):
+		if (str.count(bin(c),"1") != 1):
+			raise Pow2Error("Capacity isn't a power of two")
+		if (str.count(bin(l),"1") != 1):
+			raise Pow2Error("Line size isn't a power of two")
+		if (str.count(bin(a),"1") != 1):
+			raise Pow2Error("Associativity isn't a power of two")
+		self.capacity = c
+		self.line_size = l
+		self.block_size = c / l * a
 		self.blocks = []
-		for i in range (0, c/l*a):
-			self.blocks.append(TACache(c,l))
-		self.tag = 0
-		self.offset = 0
-		
+		self.offset_size = m.log(l,2)
+		self.lookup_size = m.log(self.block_size,2)
+		for i in range (0, self.block_size):
+			self.blocks.append(TACache(c/self.block_size,l))
+
 class Cache():
 	def __init__(self, l1d, l1i, l2, l3):
 		self.l1d = copy.deepcopy(l1d)
@@ -158,10 +204,10 @@ if __name__ == "__main__":
 		v.doInstruction(ins[0],ins[1],ins[2])
 		v.lines.remove(v.lines[0])
 	
-	ta = v.createTACache(10,2)
+	ta = v.createTACache(16,2)
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
-	sa = v.createSACache(10,2,2)
-	print v.getTACacheCapacity(sa.blocks[1])
-	print v.getTACacheCapacity(sa.blocks[2])
-
+	sa = v.createSACache(16,2,2)
+	print sa.blocks[1].offset_size
+	#print v.getTACacheCapacity(sa.blocks[1])
+	#print v.getTACacheCapacity(sa.blocks[2])
