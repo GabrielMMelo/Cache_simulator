@@ -29,6 +29,24 @@ class Validation():
 		file.close()
 		self.lines = lines_list
 
+	def counter(self, l1i, l1d, l2):
+		self.countL1 = l1d.count
+		self.countL1 += l1i.count
+		self.countL2 = l2.count
+		self.countHit = l1d.hit
+		self.countHit += l1i.hit
+		self.countHit += l2.hit
+		self.countMiss = l1d.miss
+		self.countMiss += l1i.miss
+		self.countMiss += l2.miss
+		pass
+
+	def counterL3(self, l3):
+		self.countL3 = l3.count
+		self.countHit = l3.hit
+		self.countMiss = l3.miss
+		pass
+
 	def doInstruction(self, ins, par1, par2):
 		pass
 
@@ -56,11 +74,11 @@ class Validation():
 		_tag = address - _offset
 		for addr in TACache.tag:
 			if addr == _tag:
-				#getValue() -> Pegar value
+				#value = getValue() -> Pegar value da memória (Não sei como, dá um help aí)
 				return True, value 
 		return False, value
 
-	def getOffset(self, address, offset):	#Por enquanto ta pegando na gambiarra
+	def getOffset(self, address, offset):	#Por enquanto ta pegando na gambiarra, mas funciona
 		o = address << offset
 		o = bin(o)
 		o = list(o)
@@ -71,11 +89,14 @@ class Validation():
 		return o >> offset
 
 	def setTACacheData(self, TACache, adress, value):
+		_offset = self.getOffset(address, TACache.offset_size)	
+		_tag = address - _offset
 		if TACache.tag.full():	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
-			TACache.tag.get()
-			TACache.tag.put("")
+			TACache.tag.get()	
+			TACache.tag.put(_tag)
+			#setValue(value)	-> Setar value na memória (Não sei como, dá um help aí)
 		else:
-			TACache.tag.put(value)
+			TACache.tag.put(_tag)
 			
 
 	###  SACache  ###
@@ -145,8 +166,6 @@ class TACache():
 			raise Pow2Error("Capacity isn't a power of two")
 		if (str.count(bin(l),"1") != 1):
 			raise Pow2Error("Line size isn't a power of two")
-		self.miss = 0
-		self.hit = 0
 		self.offset_size = m.log(l,2)
 		self.capacity = c
 		self.line_size = l
@@ -163,6 +182,9 @@ class SACache():
 			raise Pow2Error("Line size isn't a power of two")
 		if (str.count(bin(a),"1") != 1):
 			raise Pow2Error("Associativity isn't a power of two")
+		self.miss = 0
+		self.hit = 0
+		self.count = 0
 		self.capacity = c
 		self.line_size = l
 		self.block_size = c / l * a
