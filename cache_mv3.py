@@ -36,6 +36,11 @@ class Validation():
 		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
 		output = " "
 		return output
+	
+	def powcheck(self, n)
+		if int(math.log(n,2)) == math.log(n,2)):
+			return True
+		return False
 
 	###  TACache  ###
 	def createTACache(self, c, l):
