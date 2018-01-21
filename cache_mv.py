@@ -60,7 +60,7 @@ class Validation():
 		return output
 	
 	def powcheck(self, n)
-		if int(math.log(n,2)) == math.log(n,2)):
+		if int(m.log(n,2)) == m.log(n,2):
 			return True
 		return False
 
@@ -167,9 +167,9 @@ class Validation():
 
 class TACache():
 	def __init__(self, c, l):
-		if (str.count(bin(c),"1") != 1):			# Fazer função melhor
+		if not powcheck(c):			# Fazer função melhor
 			raise Pow2Error("Capacity isn't a power of two")
-		if (str.count(bin(l),"1") != 1):
+		if not powcheck(l):
 			raise Pow2Error("Line size isn't a power of two")
 		self.offset_size = m.log(l,2)
 		self.capacity = c
@@ -181,11 +181,11 @@ class TACache():
 	
 class SACache():
 	def __init__(self, c, a, l):
-		if (str.count(bin(c),"1") != 1):
+		if not powcheck(c):
 			raise Pow2Error("Capacity isn't a power of two")
-		if (str.count(bin(l),"1") != 1):
+		if not powcheck(l):
 			raise Pow2Error("Line size isn't a power of two")
-		if (str.count(bin(a),"1") != 1):
+		if not powcheck(a):
 			raise Pow2Error("Associativity isn't a power of two")
 		self.miss = 0
 		self.hit = 0
