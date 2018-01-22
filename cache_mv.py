@@ -80,7 +80,12 @@ class Validation():
 				#value = getValue() -> Pegar value da memoria (Nao sei como, da um help ai)
 				return True, value 
 		return False, value
-
+		'''
+		l=getTACacheLineSize(TACache)
+        x=l-1
+        offset= address & x
+        tag = address >> 6
+        '''
 	def getOffset(self, address, offset):	#Por enquanto ta pegando na gambiarra, mas funciona
 		o = address << offset
 		o = bin(o)
@@ -165,9 +170,9 @@ class Validation():
 
 class TACache():
 	def __init__(self, c, l):
-		if not powcheck(c):
+		if not powCheck(c):
 			raise Pow2Error("Capacity isn't a power of two")
-		if not powcheck(l):
+		if not powCheck(l):
 			raise Pow2Error("Line size isn't a power of two")
 		self.offset_size = m.log(l,2)
 		self.capacity = c
@@ -175,16 +180,16 @@ class TACache():
 		self.assoc = c/l
 		self.tag = q.Queue()	# Fila - FIFO
 		self.lines = []
-        
 	
 class SACache():
 	def __init__(self, c, a, l):
-		if not powcheck(c):
+		if not powCheck(c):
 			raise Pow2Error("Capacity isn't a power of two")
-		if not powcheck(l):
+		if not powCheck(l):
 			raise Pow2Error("Line size isn't a power of two")
-		if not powcheck(a):
+		if not powCheck(a):
 			raise Pow2Error("Associativity isn't a power of two")
+		if c%(a*l)!=0
 		self.miss = 0
 		self.hit = 0
 		self.count = 0
