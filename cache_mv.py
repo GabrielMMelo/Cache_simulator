@@ -72,13 +72,15 @@ class Validation():
 	def getTACacheLineSize(self, TACache):
 		return TACache.line_size
 
-	def getTACacheData(self, TACache, address, value):
-		_offset = self.getOffset(address, TACache.offset_size)	
+	def getTACacheData(self, TACache, address):		# ELE PEDE PRA INCLUIR O VALUE, MAS NAO TA FAZENDO SENTIDO EM PYTHON
+		_offset = self.getOffset(address, TACache.line_size)	
 		_tag = address - _offset
+		count = 0
 		for addr in TACache.tag:
 			if addr == _tag:
-				#value = getValue() -> Pegar value da memoria (Nao sei como, da um help ai)
+				value = TACache.lines[count][_offset]
 				return True, value 
+			count += 1
 		return False, value
 		'''
 		l=getTACacheLineSize(TACache)
@@ -87,30 +89,29 @@ class Validation():
         tag = address >> 6
         '''
 	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
-		offset = address & (l-1) 
+		offset = address & (l-49) 
 		return offset
 		'''
-		#if int(m.log(address,2))+1 :
-		o = address << int(offset)
-		print o
-		o = bin(o)
-		o = list(o)
-		for i in range(0,int(offset)):
-			del(o[2])
-		o = ''.join(o)
-		o = int(o,2)
-		return o >> int(offset)
+		if m.ceil(m.log(address,2)):
+			o = address << int(l)
+			print o
+			o = bin(o)
+			o = list(o)
+			for i in range(0,int(l)):
+				del(o[2])
+			o = ''.join(o)
+			o = int(o,2)
+			return o >> int(l)
+		else:
+			return address
 		'''
-	def setTACacheData(self, TACache, address, value):
+		
+	def setTACacheData(self, TACache, address, value): 
 		_offset = self.getOffset(address, TACache.line_size)
-		print "OFFSET OBTIDO ######"
-		print _offset	
 		_tag = address - _offset
 		if TACache.count != TACache.assoc:	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
 			TACache.tag[TACache.count] = _tag
 			TACache.lines[TACache.count][_offset] = value
-			print "COUNT ###########"
-			print TACache.count
 			TACache.count += 1
 			#setValue(value)	-> Setar value na memoria (Nao sei como, da um help ai)
 		else:
@@ -118,7 +119,7 @@ class Validation():
 			TACache.tag[TACache.count] = _tag
 			TACache.lines[TACache.count][_offset] = value
 			TACache.count += 1
-			
+		print TACache.tag		
 
 	###  SACache  ###
 	def createSACache(self, c, a, l):
@@ -195,11 +196,10 @@ class TACache():
 		self.assoc = c/l
 		#self.tag = q.Queue()	# Fila - FIFO
 		self.tag = [None]*int(c/l)
-		print "TAG #############"
-		print self.tag
-		self.lines = [[None]*16]*int(c/l)
-		print "Lines #############"
-		print self.lines
+		self.lines = []
+		aux = [None]*16
+		for i in range(0,int(c/l)):
+			self.lines.append((copy.deepcopy(aux)))
 		self.count = 0
 	
 class SACache():
@@ -259,7 +259,22 @@ if __name__ == "__main__":
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
 	v.setTACacheData(ta, 3, 4)
+	v.setTACacheData(ta, 30, 2)
+	v.setTACacheData(ta, 13, 1)
+	v.setTACacheData(ta, 22, 3)
+	v.setTACacheData(ta, 44, 5)
+	v.setTACacheData(ta, 32, 7)
+	v.setTACacheData(ta, 64, 9)
+	v.setTACacheData(ta, 16, 11)
+	v.setTACacheData(ta, 200, 13)
+	v.setTACacheData(ta, 84, 15)
 	print ta.lines
+
+	print "\n\n#########\n\n"
+
+	_, value = v.getTACacheData(ta,84)
+	print value
+	#print ta.tag
 	#sa = v.createSACache(16,2,2)
 	#print sa.blocks[1].offset_size
 	#print v.getTACacheCapacity(sa.blocks[1])
