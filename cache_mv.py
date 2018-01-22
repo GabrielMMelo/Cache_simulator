@@ -86,25 +86,38 @@ class Validation():
         offset= address & x
         tag = address >> 6
         '''
-	def getOffset(self, address, offset):	#Por enquanto ta pegando na gambiarra, mas funciona
-		o = address << offset
+	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
+		offset = address & (l-1) 
+		return offset
+		'''
+		#if int(m.log(address,2))+1 :
+		o = address << int(offset)
+		print o
 		o = bin(o)
 		o = list(o)
-		for i in range(0,offset):
+		for i in range(0,int(offset)):
 			del(o[2])
 		o = ''.join(o)
 		o = int(o,2)
-		return o >> offset
-
-	def setTACacheData(self, TACache, adress, value):
-		_offset = self.getOffset(address, TACache.offset_size)	
+		return o >> int(offset)
+		'''
+	def setTACacheData(self, TACache, address, value):
+		_offset = self.getOffset(address, TACache.line_size)
+		print "OFFSET OBTIDO ######"
+		print _offset	
 		_tag = address - _offset
-		if TACache.tag.full():	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
-			TACache.tag.get()	
-			TACache.tag.put(_tag)
+		if TACache.count != TACache.assoc:	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
+			TACache.tag[TACache.count] = _tag
+			TACache.lines[TACache.count][_offset] = value
+			print "COUNT ###########"
+			print TACache.count
+			TACache.count += 1
 			#setValue(value)	-> Setar value na memoria (Nao sei como, da um help ai)
 		else:
-			TACache.tag.put(_tag)
+			TACache.count = 0
+			TACache.tag[TACache.count] = _tag
+			TACache.lines[TACache.count][_offset] = value
+			TACache.count += 1
 			
 
 	###  SACache  ###
@@ -174,12 +187,20 @@ class TACache():
 			raise Pow2Error("Capacity isn't a power of two")
 		if not powCheck(l):
 			raise Pow2Error("Line size isn't a power of two")
-		self.offset_size = m.log(l,2)
+		self.offset_size = int(m.log(l,2))
+		print "OFFSET ###########"
+		print self.offset_size
 		self.capacity = c
 		self.line_size = l
 		self.assoc = c/l
-		self.tag = q.Queue()	# Fila - FIFO
-		self.lines = []
+		#self.tag = q.Queue()	# Fila - FIFO
+		self.tag = [None]*int(c/l)
+		print "TAG #############"
+		print self.tag
+		self.lines = [[None]*16]*int(c/l)
+		print "Lines #############"
+		print self.lines
+		self.count = 0
 	
 class SACache():
 	def __init__(self, c, a, l):
@@ -189,7 +210,7 @@ class SACache():
 			raise Pow2Error("Line size isn't a power of two")
 		if not powCheck(a):
 			raise Pow2Error("Associativity isn't a power of two")
-		if c%(a*l)!=0
+#		if c%(a*l)!=0
 		self.miss = 0
 		self.hit = 0
 		self.count = 0
@@ -234,10 +255,12 @@ if __name__ == "__main__":
 		v.doInstruction(ins[0],ins[1],ins[2])
 		v.lines.remove(v.lines[0])
 	
-	ta = v.createTACache(16,2)
+	ta = v.createTACache(512,64)
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
-	sa = v.createSACache(16,2,2)
-	print sa.blocks[1].offset_size
+	v.setTACacheData(ta, 3, 4)
+	print ta.lines
+	#sa = v.createSACache(16,2,2)
+	#print sa.blocks[1].offset_size
 	#print v.getTACacheCapacity(sa.blocks[1])
 	#print v.getTACacheCapacity(sa.blocks[2])
