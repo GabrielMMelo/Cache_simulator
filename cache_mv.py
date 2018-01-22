@@ -15,6 +15,9 @@ import math as m
 class Pow2Error(Exception):
 	pass
 
+def powCheck(n):
+	return int(m.log(n,2)) == m.log(n,2)
+
 class Validation():
 	def __init__(self):
 		self.countL1 = 0
@@ -58,11 +61,6 @@ class Validation():
 		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
 		output = " "
 		return output
-	
-	def powcheck(self, n)
-		if int(m.log(n,2)) == m.log(n,2):
-			return True
-		return False
 
 	###  TACache  ###
 	def createTACache(self, c, l):
@@ -79,7 +77,7 @@ class Validation():
 		_tag = address - _offset
 		for addr in TACache.tag:
 			if addr == _tag:
-				#value = getValue() -> Pegar value da memória (Não sei como, dá um help aí)
+				#value = getValue() -> Pegar value da memoria (Nao sei como, da um help ai)
 				return True, value 
 		return False, value
 
@@ -99,7 +97,7 @@ class Validation():
 		if TACache.tag.full():	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
 			TACache.tag.get()	
 			TACache.tag.put(_tag)
-			#setValue(value)	-> Setar value na memória (Não sei como, dá um help aí)
+			#setValue(value)	-> Setar value na memoria (Nao sei como, da um help ai)
 		else:
 			TACache.tag.put(_tag)
 			
@@ -167,7 +165,7 @@ class Validation():
 
 class TACache():
 	def __init__(self, c, l):
-		if not powcheck(c):			# Fazer função melhor
+		if not powcheck(c):
 			raise Pow2Error("Capacity isn't a power of two")
 		if not powcheck(l):
 			raise Pow2Error("Line size isn't a power of two")
