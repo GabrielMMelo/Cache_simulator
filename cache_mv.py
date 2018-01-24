@@ -155,15 +155,23 @@ class Validation():
 	### Main Memory ###
 	def createMainMemory(self, ramsize, vmsize):
 		return MainMemory(ramsize, vmsize)
-	def allocSegment(self, mem, id, size):
-		pass
-	def freeSegment(self, mem, id):
-		pass
-	def getMainMemoryData(self, mem, address, value):
-		pass
-	def setMainMemoryData(self, mem, address, value):
-		pass
-
+   	def getMainMemoryData(self, mem, address, value): #dúvida cruel: value era pra ser um parâmetro de saída, porém nao entendi como fazer, é certo retorna-lo no retorno da função?
+		for i in range(0,MainMemory.mainsize):
+            		if address == MainMemory.main[i][0]:
+                		self.getvalue = MainMemory.main[i][1]
+                		x = True
+                		break
+        	if x:
+            		return 4, getvalue
+        	else:
+            		return -1     
+	def setMainMemoryData(self, mem, address, value): # acho que esse método tá completamente errado 
+		if address < MainMemory.mainsize:
+            		MainMemory.main[address] = [address, value]
+            		return 4
+        	else:
+            		return -1
+		
 	### Memory ###
 	def createMemory(self, c, mem):
 		return Memory(c, mem)
@@ -171,9 +179,9 @@ class Validation():
 		pass
 	def getInstruction(self, mem, address, value):
 		pass
-	def getData(self, mem, address, value):
+	def setData(self, mem, address, value):
 		pass
-	def getInstruction(self, mem, address, value):
+	def setInstruction(self, mem, address, value):
 		pass
 	def duplicateMemory(self, mem):
 		pass
@@ -232,7 +240,12 @@ class Cache():
 
 class MainMemory():
 	def __init__(self, ramsize, vmsize):
-		pass
+        self.mainsize = ramsize + vmsize
+        self.main = []
+        self.address = 0
+        self.value = 0
+        for i in range(0,mainsize):
+            self.main.append([address, value])
 
 class Memory():
 	def __init__(self, c, mem):
