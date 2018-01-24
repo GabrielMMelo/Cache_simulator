@@ -82,29 +82,10 @@ class Validation():
 				return True, value 
 			count += 1
 		return False, value
-		'''
-		l=getTACacheLineSize(TACache)
-        x=l-1
-        offset= address & x
-        tag = address >> 6
-        '''
+
 	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
 		offset = address & (l-49) 
 		return offset
-		'''
-		if m.ceil(m.log(address,2)):
-			o = address << int(l)
-			print o
-			o = bin(o)
-			o = list(o)
-			for i in range(0,int(l)):
-				del(o[2])
-			o = ''.join(o)
-			o = int(o,2)
-			return o >> int(l)
-		else:
-			return address
-		'''
 		
 	def setTACacheData(self, TACache, address, value): 
 		_offset = self.getOffset(address, TACache.line_size)
@@ -155,22 +136,22 @@ class Validation():
 	### Main Memory ###
 	def createMainMemory(self, ramsize, vmsize):
 		return MainMemory(ramsize, vmsize)
-   	def getMainMemoryData(self, mem, address, value): #dúvida cruel: value era pra ser um parâmetro de saída, porém nao entendi como fazer, é certo retorna-lo no retorno da função?
-		for i in range(0,MainMemory.mainsize):
-            		if address == MainMemory.main[i][0]:
-                		self.getvalue = MainMemory.main[i][1]
-                		x = True
-                		break
-        	if x:
-            		return 4, getvalue
-        	else:
-            		return -1     
-	def setMainMemoryData(self, mem, address, value): # acho que esse método tá completamente errado 
-		if address < MainMemory.mainsize:
-            		MainMemory.main[address] = [address, value]
-            		return 4
-        	else:
-            		return -1
+
+	def getMainMemoryData(self, mem, address): # ELE PEDE PRA INCLUIR O VALUE, MAS NAO TA FAZENDO SENTIDO EM PYTHON
+		if address < 0 or address > (mem.mainsize -1):
+			return -1
+
+		if mem.main[address] != None:
+			return 4, mem.main[address]
+
+		return -1, mem.main[address]
+
+	def setMainMemoryData(self, mem, address, value): # acho que esse metodo ta completamente errado 
+		if address < 0 or address > (mem.mainsize -1):
+			return -1
+
+		mem.main[address] = value
+		return 4
 		
 	### Memory ###
 	def createMemory(self, c, mem):
@@ -240,12 +221,12 @@ class Cache():
 
 class MainMemory():
 	def __init__(self, ramsize, vmsize):
-        self.mainsize = ramsize + vmsize
-        self.main = []
-        self.address = 0
-        self.value = 0
-        for i in range(0,mainsize):
-            self.main.append([address, value])
+		self.mainsize = ramsize + vmsize
+		self.main = []
+		self.address = 0
+		self.value = None
+		for i in range(0,self.mainsize):
+			self.main.append(self.value)
 
 class Memory():
 	def __init__(self, c, mem):
@@ -267,7 +248,13 @@ if __name__ == "__main__":
 		ins = v.lines[0].split()
 		v.doInstruction(ins[0],ins[1],ins[2])
 		v.lines.remove(v.lines[0])
-	
+
+	mmem = v.createMainMemory(128,128)
+	v.setMainMemoryData(mmem, 120, 20)
+	_,data = v.getMainMemoryData(mmem,120)
+	print data
+
+	'''
 	ta = v.createTACache(512,64)
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
@@ -287,6 +274,7 @@ if __name__ == "__main__":
 
 	_, value = v.getTACacheData(ta,84)
 	print value
+	'''
 	#print ta.tag
 	#sa = v.createSACache(16,2,2)
 	#print sa.blocks[1].offset_size
