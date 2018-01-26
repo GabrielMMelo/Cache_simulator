@@ -170,20 +170,76 @@ class Validation():
 	###  Cache  ###
 	def createCache(self, l1d,l1i,l2,l3):
 		return Cache(l1d, l1i, l2, l3)
-	def getCacheData(self, c, adress, value):
-		pass
+
+	def getCacheData(self, c, mmem, adress, value):
+		if self.getSACacheData(c.l1d,address, value):
+			return 1
+		elif self.getSACacheData(c.l2,address, value):
+			setSACacheData(c.l1d, address, value)
+			return 2
+		elif self.getSACacheData(c.l3,address, value):
+			setSACacheData(c.l1d, address, value)
+			setSACacheData(c.l2, address, value)
+			return 3
+		else:
+			self.fetchCacheData(c, addres, value)
+
 	def getCacheInstruction(self, c, address, value):
-		pass
+		if self.getSACacheData(c.l1i,address, value):
+			return 1
+		elif self.getSACacheData(c.l2,address, value):
+			setSACacheData(c.l1i, address, value)
+			return 2
+		elif self.getSACacheData(c.l3,address, value):
+			setSACacheData(c.l1i, address, value)
+			setSACacheData(c.l2, address, value)
+			return 3
+		else:
+			self.fetchCacheInstruction(c, addres, value)
+
 	def setCacheData(self, c, address, value):
-		pass
+		self.setSACacheData(c.l1d, address, value):
+		#	self.setSACacheLine(c.l1d, address, value)
+		self.setSACacheData(c.l2, address, value):
+		#	self.setSACacheLine(c.l2, address, value)
+		self.setSACacheData(c.l3, address, value):
+		#	self.setSACacheLine(c.l3, address, value)
+
 	def setCacheInstruction(self, c, address, value):
-		pass
+		self.setSACacheData(c.l1i, address, value):
+		#	self.setSACacheLine(c.l1i, address, value)
+		self.setSACacheData(c.l2, address, value):
+		#	self.setSACacheLine(c.l2, address, value)
+		self.setSACacheData(c.l3, address, value):
+		#	self.setSACacheLine(c.l3, address, value)
+
 	def duplicateCache(self, c):
-		pass
-	def fetchCacheData(self, Cache, mmem, address, value):
-		_offset = self.getOffset(address, TACache.line_size)
+		return copy.deepcopy(SACache)
+
+	def fetchCacheData(self, c, mmem, address):
+		line = []
+		_offset = self.getOffset(address, c.l1.line_size)
 		_tag = address - _offset
-		ia = _tag << 
+		ia = _tag << m.ceil(m.log(l/4,2))
+		fa = ia + (l/4) - 1
+		for i in range(ia,fa):
+			line.append(mmem.main[i])
+		self.setSACacheLine(c.l1d, address, line)
+		self.setSACacheLine(c.l2, address, line)
+		self.setSACacheLine(c.l3, address, line)
+
+
+	def fetchCacheInstruction(self, Cache, mmem, address, value):
+		line = []
+		_offset = self.getOffset(address, c.l1.line_size)
+		_tag = address - _offset
+		ia = _tag << m.ceil(m.log(l/4,2))
+		fa = ia + (l/4) - 1
+		for i in range(ia,fa):
+			line.append(mmem.main[i])
+		self.setSACacheLine(c.l1i, address, line)
+		self.setSACacheLine(c.l2, address, line)
+		self.setSACacheLine(c.l3, address, line)
 
 	### Main Memory ###
 	def createMainMemory(self, ramsize, vmsize):
