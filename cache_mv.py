@@ -83,29 +83,46 @@ class Validation():
 			count += 1
 		return False, value
 
-	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
-		offset = address & (l-49) 
-		return offset
-
-	def getLookup(self, adress, l_size, o_size):
-		lookup = address >> o_size
-		lookup = lookup & l_size
-		return lookup
 		
-	def setTACacheData(self, TACache, address, value): 
+	def setTACacheLine(self, TACache, address, line):
 		_offset = self.getOffset(address, TACache.line_size)
 		_tag = address - _offset
 		if TACache.count != TACache.assoc:	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
 			TACache.tag[TACache.count] = _tag
-			TACache.lines[TACache.count][_offset] = value
+			count = 0
+			for l in line:
+				TACache.lines[TACache.count][count] = l
+				count += 1
 			TACache.count += 1
-			#setValue(value)	-> Setar value na memoria (Nao sei como, da um help ai)
 		else:
 			TACache.count = 0
 			TACache.tag[TACache.count] = _tag
-			TACache.lines[TACache.count][_offset] = value
+			count = 0
+			for l in line:
+				TACache.lines[TACache.count][count] = l
+				count += 1
 			TACache.count += 1
-		print TACache.tag		
+
+	def setTACacheData(self, TACache, address, value): 
+		_offset = self.getOffset(address, TACache.line_size)
+		_tag = address - _offset
+		count = 0
+		for addr in TACache.tag:
+			if addr == _tag:
+				TACache.lines[count][_offset] = value
+				return True
+			count += 1
+		return False
+
+	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
+		offset = address & (l-49)
+		return offset
+
+	def getLookup(self, address, l_size, o_size):
+		lookup = address >> o_size
+		print lookup
+		lookup = lookup & l_size
+		return lookup
 
 	###  SACache  ###
 	def createSACache(self, c, a, l):
@@ -116,13 +133,39 @@ class Validation():
 		return SACache.line_size
 
 	def getSACacheData(self, SACache, address, value):
-		return  True, value
+		_offset = self.getOffset(address, SACache.blocks[0].line_size)
+		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
+		_tag = address >> (m.ceil(m.log(SACache.lookup_size,2)) + SACache.offset_size)
 
-	def setSACacheData(self, SACache, address, value):
-		pass
+		for addr in SACache.blocks[_lookup].tag:
+			if addr == _tag:
+				value = SACache.blocks[_lookup].lines[count][_offset]
+				return True, value
+			count += 1
+		return False, value
+
+
+	def setSACacheLine(self, SACache, address, line):
+		_offset = self.getOffset(address, SACache.blocks[0].line_size)
+		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
+		self.setTACacheLine(self, SACache.blocks[_lookup], address, line)
+
+	def setSACacheData(self, SACache, address, value):	
+		_offset = self.getOffset(address, TACache.line_size)
+		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
+		_tag = address - _offset
+		
+		count = 0
+
+		for addr in SACache.blocks[_lookup].tag:
+			if addr == _tag:
+				SACache.blocks[_lookup].lines[count][_offset] = value
+				return True
+			count += 1
+		return False
 
 	def duplicateSACache(self, SACache):
-		pass
+		return copy.deepcopy(SACache)
 
 	###  Cache  ###
 	def createCache(self, l1d,l1i,l2,l3):
@@ -137,6 +180,10 @@ class Validation():
 		pass
 	def duplicateCache(self, c):
 		pass
+	def fetchCacheData(self, Cache, mmem, address, value):
+		_offset = self.getOffset(address, TACache.line_size)
+		_tag = address - _offset
+		ia = _tag << 
 
 	### Main Memory ###
 	def createMainMemory(self, ramsize, vmsize):
@@ -151,7 +198,7 @@ class Validation():
 
 		return -1, mem.main[address]
 
-	def setMainMemoryData(self, mem, address, value): # acho que esse metodo ta completamente errado 
+	def setMainMemoryData(self, mem, address, value):
 		if address < 0 or address > (mem.mainsize -1):
 			return -1
 
@@ -213,7 +260,7 @@ class SACache():
 		self.block_size = c / l * a
 		self.blocks = []
 		self.offset_size = int(m.log(l,2))
-		self.lookup_size = m.ceil(m.log(self.block_size,2))
+		self.lookup_size = self.block_size
 		for i in range (0, self.block_size):
 			self.blocks.append(TACache(c/self.block_size,l))
 
@@ -228,9 +275,8 @@ class MainMemory():
 	def __init__(self, ramsize, vmsize):
 		self.mainsize = ramsize + vmsize
 		self.main = []
-		self.address = 0
 		self.value = None
-		for i in range(0,self.mainsize):
+		for i in range(0,self.mainsize/4):
 			self.main.append(self.value)
 
 class Memory():
@@ -259,8 +305,12 @@ if __name__ == "__main__":
 	_,data = v.getMainMemoryData(mmem,120)
 	print data
 
-	'''
+	oi = v.getLookup(50,7,2)
+	print oi
+	
 	ta = v.createTACache(512,64)
+	print ta.lines
+	'''
 	print v.getTACacheCapacity(ta)
 	print v.getTACacheLineSize(ta)
 	v.setTACacheData(ta, 3, 4)
@@ -281,7 +331,7 @@ if __name__ == "__main__":
 	print value
 	'''
 	#print ta.tag
-	sa = v.createSACache(16,2,2)
+	#sa = v.createSACache(16,2,2)
 	#print sa.blocks[1].offset_size
 	#print v.getTACacheCapacity(sa.blocks[1])
 	#print v.getTACacheCapacity(sa.blocks[2])
