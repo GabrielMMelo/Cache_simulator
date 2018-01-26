@@ -86,6 +86,11 @@ class Validation():
 	def getOffset(self, address, l):	#Por enquanto ta pegando na gambiarra, mas funciona
 		offset = address & (l-49) 
 		return offset
+
+	def getLookup(self, adress, l_size, o_size):
+		lookup = address >> o_size
+		lookup = lookup & l_size
+		return lookup
 		
 	def setTACacheData(self, TACache, address, value): 
 		_offset = self.getOffset(address, TACache.line_size)
@@ -207,8 +212,8 @@ class SACache():
 		self.line_size = l
 		self.block_size = c / l * a
 		self.blocks = []
-		self.offset_size = m.log(l,2)
-		self.lookup_size = m.log(self.block_size,2)
+		self.offset_size = int(m.log(l,2))
+		self.lookup_size = m.ceil(m.log(self.block_size,2))
 		for i in range (0, self.block_size):
 			self.blocks.append(TACache(c/self.block_size,l))
 
@@ -276,7 +281,7 @@ if __name__ == "__main__":
 	print value
 	'''
 	#print ta.tag
-	#sa = v.createSACache(16,2,2)
+	sa = v.createSACache(16,2,2)
 	#print sa.blocks[1].offset_size
 	#print v.getTACacheCapacity(sa.blocks[1])
 	#print v.getTACacheCapacity(sa.blocks[2])
