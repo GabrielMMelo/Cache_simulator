@@ -6,6 +6,8 @@
 #	4 - n = c/l*a 
 #	5 - Caches inclusivos
 #	6 - Politica de escrita: Write-through
+#	
+#	1- Arrumar addresses = dividir por 4 todos address
 
 import sys
 import copy
@@ -50,9 +52,36 @@ class Validation():
 		self.countMiss = l3.miss
 		pass
 
-	def doInstruction(self, ins, par1, par2):
-		pass
-
+	def doInstruction(self, ins):
+		print ins[0]
+		if ins[0] == "cl1d":
+			print "oi"
+			return self.createSACache(float(ins[1]), float(ins[2]), float(ins[3]))
+		elif ins[0] == "cl1i":
+			return self.createSACache(ins[1], ins[2], ins[3])
+		elif ins[0] == "cl2":
+			return self.createSACache(ins[1], ins[2], ins[3])
+		elif ins[0] == "cl3":
+			l3 = self.createSACache(ins[1], ins[2], ins[3])
+			c = self.createCache(l1d,l1i,l2,l3)
+			return l3, c
+		elif ins[0] == "cmp":
+			return self.createMainMemory(ins[1], ins[2])
+		elif ins[0] == "cmem":
+			return self.createMemory(c, main)
+		elif ins[0] == "cp":
+			return self.createProcessor(ins[1], ins[2])
+		elif ins[0] == "ri":
+			pass
+		elif ins[0] == "wi":
+			pass
+		elif ins[0] == "wd":
+			pass
+		elif ins[0] == "asserti":
+			pass
+		elif ins[0] == "assertd":
+			pass
+			
 	def createOutput(self):
 		# - Descricao de toda a hierarquia de memoria, com dados de capacidade, associatividade e
 		#	tamanho de linhas de cada nivel de cache, tamanho da memoria RAM e da memoria virtual,
@@ -320,7 +349,7 @@ class SACache():
 		self.lookup_size = c / (l * a)
 		self.blocks = []
 		self.offset_size = int(m.log(l,2))
-		for i in range (0, self.lookup_size):
+		for i in range (0, int(self.lookup_size)):
 			self.blocks.append(TACache(c/self.lookup_size,l))
 
 class Cache():
@@ -350,14 +379,57 @@ class Processor():
 		for i in range(0,ncores):
 			self.memory.append(mem)
 
+def meupau(v):
+	print v.getSACacheCapacity(l1d) # deu bom, os niveis de cache sao visiveis para outras funcoes
+
+
 if __name__ == "__main__":
 	v = Validation()
 	ins = []
+	ins = v.lines[0].split()
+	l1d = v.doInstruction(ins)
 
-	while len(v.lines) > 0:
+	meupau(v)
+
+	'''
+	for i in range(0,7):
+		print i 
 		ins = v.lines[0].split()
-		v.doInstruction(ins[0],ins[1],ins[2])
+		
+		for i in range(0, len(ins)):
+			if i != 0:
+				ins[i] = float(ins[i])
+
+		print ins
+		if i == 0:
+			global l1d 
+			l1d = v.doInstruction(ins)
+		
+		elif i == 1:
+			global l1i 
+			l1i = v.doInstruction(ins)
+		elif i == 2:
+			global l2
+			l2 = v.doInstruction(ins)
+		elif i == 3:
+			global l3 
+			global c
+			l3, c = v.doInstruction(ins)
+		elif i == 4:
+			global main
+			main = v.doInstruction(ins)
+		elif i==5:
+			global mem
+			mem = v.doInstruction(ins)
+		elif i==6:
+			global processador
+			processador = v.doInstruction(ins)
 		v.lines.remove(v.lines[0])
+
+	#while len(v.lines) > 0:
+		#ins = v.lines[0].split()
+		#v.doInstruction(ins)
+		#v.lines.remove(v.lines[0])
 
 # TA tests
 
@@ -406,7 +478,6 @@ if __name__ == "__main__":
 	a,value = v.getMainMemoryData(mem, 53, 0)
 
 
-	'''
 	mmem = v.createMainMemory(128,128)
 	v.setMainMemoryData(mmem, 12, 20)
 	_,data = v.getMainMemoryData(mmem,12)
