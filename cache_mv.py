@@ -1,17 +1,16 @@
 #TODO:
 # 	tinyurl.com/ydhcvqy3
+#
 # 	1 - Comparacao das tags com operadores logicos 
 #	2 - FIFO para escrever ou contador
 #	3 - a = c/l
 #	4 - n = c/l*a 
 #	5 - Caches inclusivos
 #	6 - Politica de escrita: Write-through
+#
 #	TODO2:
 #	1 - Fazer o relatorio (quantidade de HIT/MISS)
 #	2 - Implementar assert
-#
-#	*** Rodar para demais processadores:
-#	1 - Reconstruir as demais memorias como a primeira memoria
 #
 
 import sys
@@ -196,7 +195,6 @@ class Validation():
 			SACache.count += 1
 		return False, value
 
-
 	def setSACacheLine(self, SACache, address, line):
 		_offset = self.getOffset(address, SACache.blocks[0].line_size)
 		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
@@ -205,22 +203,28 @@ class Validation():
 	def setSACacheData(self, SACache, address, value):	
 		_offset = self.getOffset(address, SACache.line_size)
 		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
-		_tag = address - _offset
+		#_lookup2 = _lookup << int(m.ceil(m.log(SACache.offset_size,2)))
+		#_lookup2 += _offset
+		#_tag = address - _lookup2
 		
-		count = 0
+		if not self.setTACacheData(SACache.blocks[_lookup], address, value):
+			return False
+		
+		return True
 
-		for addr in SACache.blocks[_lookup].tag:
-			if addr == _tag:
-				SACache.blocks[_lookup].lines[count][_offset] = value
-				return True
-			count += 1
-		return False
+		#for addr in SACache.blocks[_lookup].tag:
+		#	if addr == _tag:
+		#		print "ENTROU"
+		#		SACache.blocks[_lookup].lines[count][_offset] = value
+		#		return True
+		#	count += 1
+		#return False
 
 	def duplicateSACache(self, SACache):
-		return copy.deepcopy(SACache)
+		pass
 
 	###  Cache  ###
-	def createCache(self):
+	def createCache(self, L1d, L1i, L2, L3):
 		return Cache()
 
 	# TODO
@@ -236,32 +240,38 @@ class Validation():
 			self.setSACacheData(c.l1d, address, value)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
+
 		if ret3:
-			self.setSACacheData(c.l1d, address, value)
-			self.setSACacheData(c.l2, address, value)
+			if not self.setSACacheData(c.l1i, address, value):
+				self.fetchCacheData(c, mmem, address)
+			if not self.setSACacheData(c.l2, address, value):
+				self.fetchCacheData(c, mmem, address)
 			return 3
 
-		if address >= mmem.mainsize:
+		if address >= mmem.mainsize or address < 0:
 			return -1
 
 		self.fetchCacheData(c, mmem, address)
 		return 4
 
 	def getCacheInstruction(self, c, mmem, address):
-		ret1, value = self.getSACacheData(c.l1d,address)
+		ret1, value = self.getSACacheData(c.l1i,address)
 		if ret1:
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
 		if ret2:
-			self.setSACacheData(c.l1d, address, value)
+			self.setSACacheData(c.l1i, address, value)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
+
 		if ret3:
-			self.setSACacheData(c.l1d, address, value)
-			self.setSACacheData(c.l2, address, value)
+			if not self.setSACacheData(c.l1i, address, value):
+				self.fetchCacheData(c, mmem, address)
+			if not self.setSACacheData(c.l2, address, value):
+				self.fetchCacheData(c, mmem, address)
 			return 3
 		
-		if address >= mmem.mainsize:
+		if address >= mmem.mainsize or address < 0:
 			return -1
 
 		self.fetchCacheInstruction(c, mmem, address)
@@ -284,7 +294,11 @@ class Validation():
 		#	self.setSACacheLine(c.l3, address, value)
 
 	def duplicateCache(self, c):
-		return self.createCache()
+		self.duplicateSACache(c.l1d)
+		self.duplicateSACache(c.l1i)
+		self.duplicateSACache(c.l2)
+		self.duplicateSACache(c.l3)
+		return self.createCache(c.l1d, c.l1i, c.l2, c.l3)
 
 	def fetchCacheData(self, c, mmem, address):
 		line = []
@@ -502,8 +516,6 @@ if __name__ == "__main__":
 
 		resposta = v.doInstruction(ins)
 		print "ler"
-		print processador.memory[0].memory.main[int(ins[2]/4)]
-		print processador.memory[1].memory.main[int(ins[2]/4)]
 		print "resposta"
 		print resposta
 		v.lines.remove(v.lines[0])
