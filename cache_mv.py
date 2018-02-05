@@ -92,7 +92,7 @@ class Validation():
 		elif ins[0] == "wd":
 			print "Chamou setInstruction()"
 			return self.setData(processador.memory[int(ins[1])],ins[2], ins[3])
-		# Nao explicita como deve ser o retorno
+		# n addr level value
 		elif ins[0] == "asserti":
 			pass
 		# Nao explicita como deve ser o retorno
@@ -247,6 +247,9 @@ class Validation():
 			setSACacheData(c.l2, address, value)
 			return 3
 
+		if address >= mmem.mainsize:
+			return -1
+
 		self.fetchCacheData(c, mmem, address)
 		return 4
 
@@ -264,6 +267,9 @@ class Validation():
 			setSACacheData(c.l2, address, value)
 			return 3
 		
+		if address >= mmem.mainsize:
+			return -1
+
 		self.fetchCacheInstruction(c, mmem, address)
 		return 4
 
@@ -499,7 +505,8 @@ if __name__ == "__main__":
 		ins = v.lines[0].split()
 
 		resposta = v.doInstruction(ins)
-		print processador.memory[0].memory.main[int(ins[2]/4)]
+		print "ler"
+		#print processador.memory[0].memory.main[int(ins[2]/4)]
 		print "resposta"
 		print resposta
 		v.lines.remove(v.lines[0])
