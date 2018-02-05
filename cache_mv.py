@@ -16,9 +16,9 @@
 #
 #
 #	SAUDE: 
-#	1 - Na entrada "asserti" nao eh explicitado o retorno
-#	2 - O que usar no lugar do "log()"
-#	3 - deepcopy() ou reconstruir as proximas memorias 
+#	1 - Na entrada "asserti" nao eh explicitado o retorno 	TRUE
+#	2 - O que usar no lugar do "log()"					LOG MESMO	
+#	3 - deepcopy() ou reconstruir as proximas memorias 		RECONSTRUIR
 
 import sys
 import copy
@@ -85,7 +85,8 @@ class Validation():
 			# ncore & address
 			return self.getInstruction(processador.memory[int(ins[1])],ins[2])
 		elif ins[0] == "wi":
-			return self.processor[ins[1]].setInstruction(hier_mem, ins[2], ins[3])
+			print "Chamou setInstruction()"
+			return self.setInstruction(processador.memory[int(ins[1])],ins[2], ins[3])
 		elif ins[0] == "rd":
 			return self.processor[ins[1]].getData(hier_mem,ins[2])
 		elif ins[0] == "wd":
@@ -134,10 +135,16 @@ class Validation():
 		if TACache.count != TACache.assoc:	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
 			TACache.tag[TACache.count] = _tag
 			count = 0
+			
 			for l in line:
-				print TACache.count
+				#print TACache.lines
+				#print line
+				#print count
+				#print TACache.count
+
 				TACache.lines[TACache.count][count] = l
 				count += 1
+			#print TACache.lines[0]
 			TACache.count += 1
 		else:
 			TACache.count = 0
@@ -160,13 +167,16 @@ class Validation():
 		return False
 
 	def getOffset(self, address, l):	
-		address = address>>2
+		#address = address>>2
 		offset = address & int(l-49)
 		return offset
 
 	def getLookup(self, address, l_size, o_size):
-		address = address>>2
+		#address = address>>2
 		lookup = address >> o_size
+		print "l_size-1"
+		print l_size-1
+
 		lookup = lookup & int(l_size-1)
 		return lookup
 
@@ -179,15 +189,29 @@ class Validation():
 		return SACache.line_size
 
 	def getSACacheData(self, SACache, address):
+		print "address"
+		print bin(address)
 		_offset = self.getOffset(address, SACache.blocks[0].line_size)
+		print "offset"
+		print _offset
 		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
-		_tag = address >> int((m.ceil(m.log(SACache.lookup_size,2)) + SACache.offset_size))
+		print "lookup"
+		print _lookup
+		_lookup2 = _lookup << int(m.ceil(m.log(SACache.offset_size,2)))
+		_lookup2 += _offset
+		print int((m.ceil(m.log(SACache.lookup_size,2) + m.log(SACache.offset_size,2))))
+		_tag = address - _lookup2
+		#_tag = address << int((m.ceil(m.log(SACache.lookup_size,2) + m.log(SACache.offset_size,2))))
+		print "TAG"
+		print _tag
 		value = 0
+		SACache.count = 0
 		for addr in SACache.blocks[_lookup].tag:
 			if addr == _tag:
 				value = SACache.blocks[_lookup].lines[SACache.count][_offset]
 				return True, value
 			SACache.count += 1
+		print "#############"
 		return False, value
 
 
@@ -222,6 +246,7 @@ class Validation():
 	# Usar o retorno dos Get para o value do Set
 	def getCacheData(self, c, mmem, address):
 		ret1, value = self.getSACacheData(c.l1d,address)
+		print value
 		if ret1:
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
@@ -249,9 +274,9 @@ class Validation():
 			setSACacheData(c.l1d, address, value)
 			setSACacheData(c.l2, address, value)
 			return 3
-		else:
-			print "VAITOMANOCU"
-			self.fetchCacheInstruction(c, mmem, address)
+		
+		self.fetchCacheInstruction(c, mmem, address)
+		return 4
 
 	def setCacheData(self, c, address, value):
 		self.setSACacheData(c.l1d, address, value)
@@ -305,10 +330,15 @@ class Validation():
 		line = []
 		_offset = self.getOffset(address, c.l1d.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(c.l1i.line_size/4,2))
+		ia = _tag #<< int(m.ceil(m.log(c.l1i.line_size/4,2)))
 		fa = ia + (int(c.l1i.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		print bin(_offset)
+		print bin(_tag)
+		print bin(address)
+		print bin(ia)
+		print bin(fa)
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l1d, address, line)
 
 		line = []
@@ -316,8 +346,8 @@ class Validation():
 		_tag = address - _offset
 		ia = _tag #<< m.ceil(m.log(l/4,2))
 		fa = ia + (int(c.l2.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l2, address, line)
 
 		line = []
@@ -325,8 +355,8 @@ class Validation():
 		_tag = address - _offset
 		ia = _tag #<< m.ceil(m.log(l/4,2))
 		fa = ia + (int(c.l3.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l3, address, line)
 
 	### Main Memory ###
@@ -347,6 +377,7 @@ class Validation():
 			return -1
 
 		mem.main[address] = value
+	#	print mem.main[address]
 		return 4
 		
 	### Memory ###
@@ -358,15 +389,17 @@ class Validation():
 
 	def getInstruction(self, mem, address):
 		address = int(address)>>2
-		self.getCacheInstruction(mem.cache, mem.memory, address)
+		return self.getCacheInstruction(mem.cache, mem.memory, address)
+
 
 	def setData(self, mem, address, value):
-		address = address>>2
+		address = int(address)>>2
 		self.setCacheData(mem.cache, address, value)
 		self.setMainMemoryData(mem.memory, address, value)
 
 	def setInstruction(self, mem, address, value):
-		address = address>>2
+		address = int(address)>>2
+		print "Chamou setCacheInstruction() e setMainMemoryData()"
 		self.setCacheInstruction(mem.cache, address, value)
 		self.setMainMemoryData(mem.memory, address, value)
 
@@ -392,7 +425,7 @@ class TACache():
 		#self.tag = q.Queue()	# Fila - FIFO
 		self.tag = [None]*int(c/l)
 		self.lines = []
-		aux = [None]*16
+		aux = [None]* (int(l)>>2)
 		for i in range(0,int(c/l)):
 			self.lines.append((copy.deepcopy(aux)))
 		self.count = 0
@@ -405,7 +438,6 @@ class SACache():
 			raise Pow2Error("Line size isn't a power of two")
 		if not powCheck(a):
 			raise Pow2Error("Associativity isn't a power of two")
-#		if c%(a*l)!=0
 		self.miss = 0
 		self.hit = 0
 		self.count = 0
@@ -447,7 +479,6 @@ class Processor():
 if __name__ == "__main__":
 	v = Validation()
 	ins = ''
-
 	for i in range(0,7):
 		print i
 		ins = v.lines[0].split()
@@ -477,15 +508,20 @@ if __name__ == "__main__":
 			processador = v.doInstruction(ins)
 
 
-	v.setInstruction(processador.memory[0], 1, 4)
-	print processador.memory[0].memory.main
+	#v.setInstruction(processador.memory[0], 1, 4)
+	#print processador.memory[0].memory.main
 	while len(v.lines) > 0:
 		ins = v.lines[0].split()
 		resposta = v.doInstruction(ins)
+		print "size"
+		print len(processador.memory[0].memory.main)
+		print processador.memory[0].memory.main[int(ins[2]/4)]
+		print "resposta"
 		print resposta
 		v.lines.remove(v.lines[0])
 
 
+	#print processador.memory[0].cache.l1i.blocks[0].lines
 	
 '''
 	#processador.memory[0].cache.l3.blocks[0].lines[1][1] = 1
