@@ -88,9 +88,10 @@ class Validation():
 			print "Chamou setInstruction()"
 			return self.setInstruction(processador.memory[int(ins[1])],ins[2], ins[3])
 		elif ins[0] == "rd":
-			return self.processor[ins[1]].getData(hier_mem,ins[2])
+			return self.getData(processador.memory[int(ins[1])],ins[2])
 		elif ins[0] == "wd":
-			return self.processor[ins[1]].setData(hier_mem, ins[2], ins[3])
+			print "Chamou setInstruction()"
+			return self.setData(processador.memory[int(ins[1])],ins[2], ins[3])
 		# Nao explicita como deve ser o retorno
 		elif ins[0] == "asserti":
 			pass
@@ -174,9 +175,6 @@ class Validation():
 	def getLookup(self, address, l_size, o_size):
 		#address = address>>2
 		lookup = address >> o_size
-		print "l_size-1"
-		print l_size-1
-
 		lookup = lookup & int(l_size-1)
 		return lookup
 
@@ -189,21 +187,12 @@ class Validation():
 		return SACache.line_size
 
 	def getSACacheData(self, SACache, address):
-		print "address"
-		print bin(address)
 		_offset = self.getOffset(address, SACache.blocks[0].line_size)
-		print "offset"
-		print _offset
 		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
-		print "lookup"
-		print _lookup
 		_lookup2 = _lookup << int(m.ceil(m.log(SACache.offset_size,2)))
 		_lookup2 += _offset
-		print int((m.ceil(m.log(SACache.lookup_size,2) + m.log(SACache.offset_size,2))))
 		_tag = address - _lookup2
 		#_tag = address << int((m.ceil(m.log(SACache.lookup_size,2) + m.log(SACache.offset_size,2))))
-		print "TAG"
-		print _tag
 		value = 0
 		SACache.count = 0
 		for addr in SACache.blocks[_lookup].tag:
@@ -211,7 +200,6 @@ class Validation():
 				value = SACache.blocks[_lookup].lines[SACache.count][_offset]
 				return True, value
 			SACache.count += 1
-		print "#############"
 		return False, value
 
 
@@ -258,8 +246,9 @@ class Validation():
 			setSACacheData(c.l1d, address, value)
 			setSACacheData(c.l2, address, value)
 			return 3
-		else:
-			self.fetchCacheData(c, address, value)
+
+		self.fetchCacheData(c, mmem, address)
+		return 4
 
 	def getCacheInstruction(self, c, mmem, address):
 		ret1, value = self.getSACacheData(c.l1d,address)
@@ -301,42 +290,37 @@ class Validation():
 		line = []
 		_offset = self.getOffset(address, c.l1d.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(l/4,2))
+		ia = _tag 
 		fa = ia + (int(c.l1d.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l1d, address, line)
 
 		line = []
 		_offset = self.getOffset(address, c.l2.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(l/4,2))
+		ia = _tag 
 		fa = ia + (int(c.l2.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l2, address, line)
 
 		line = []
 		_offset = self.getOffset(address, c.l3.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(l/4,2))
+		ia = _tag 
 		fa = ia + (int(c.l3.line_size)>>2) - 1
-		for i in range(ia,fa):
-			line.append(mmem.main[i])
+		for i in range(ia,fa+1):
+			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l3, address, line)
 
 
 	def fetchCacheInstruction(self, c, mmem, address):
 		line = []
-		_offset = self.getOffset(address, c.l1d.line_size)
+		_offset = self.getOffset(address, c.l1i.line_size)
 		_tag = address - _offset
-		ia = _tag #<< int(m.ceil(m.log(c.l1i.line_size/4,2)))
+		ia = _tag 
 		fa = ia + (int(c.l1i.line_size)>>2) - 1
-		print bin(_offset)
-		print bin(_tag)
-		print bin(address)
-		print bin(ia)
-		print bin(fa)
 		for i in range(ia,fa+1):
 			line.append(copy.deepcopy(mmem.main[i]))
 		self.setSACacheLine(c.l1d, address, line)
@@ -344,7 +328,7 @@ class Validation():
 		line = []
 		_offset = self.getOffset(address, c.l2.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(l/4,2))
+		ia = _tag 
 		fa = ia + (int(c.l2.line_size)>>2) - 1
 		for i in range(ia,fa+1):
 			line.append(copy.deepcopy(mmem.main[i]))
@@ -353,7 +337,7 @@ class Validation():
 		line = []
 		_offset = self.getOffset(address, c.l3.line_size)
 		_tag = address - _offset
-		ia = _tag #<< m.ceil(m.log(l/4,2))
+		ia = _tag 
 		fa = ia + (int(c.l3.line_size)>>2) - 1
 		for i in range(ia,fa+1):
 			line.append(copy.deepcopy(mmem.main[i]))
@@ -384,8 +368,8 @@ class Validation():
 	def createMemory(self, c, mem):
 		return Memory(c, mem)
 	def getData(self, mem, address):
-		address = address>>2
-		self.getCacheData(mem.cache, mem.memory, address)
+		address = int(address)>>2
+		return self.getCacheData(mem.cache, mem.memory, address)
 
 	def getInstruction(self, mem, address):
 		address = int(address)>>2
@@ -394,6 +378,7 @@ class Validation():
 
 	def setData(self, mem, address, value):
 		address = int(address)>>2
+		print "Chamou setCacheInstruction() e setMainMemoryData()"
 		self.setCacheData(mem.cache, address, value)
 		self.setMainMemoryData(mem.memory, address, value)
 
@@ -512,9 +497,8 @@ if __name__ == "__main__":
 	#print processador.memory[0].memory.main
 	while len(v.lines) > 0:
 		ins = v.lines[0].split()
+
 		resposta = v.doInstruction(ins)
-		print "size"
-		print len(processador.memory[0].memory.main)
 		print processador.memory[0].memory.main[int(ins[2]/4)]
 		print "resposta"
 		print resposta
