@@ -7,18 +7,12 @@
 #	5 - Caches inclusivos
 #	6 - Politica de escrita: Write-through
 #	TODO2:
-#	*** Rodar para um processador apenas:
-#	1 - Linha '129' list out of range
-#	2 - DEMAIS ERROS QUE APARECEREM	
+#	1 - Fazer o relatorio (quantidade de HIT/MISS)
+#	2 - Implementar assert
 #
 #	*** Rodar para demais processadores:
 #	1 - Reconstruir as demais memorias como a primeira memoria
 #
-#
-#	SAUDE: 
-#	1 - Na entrada "asserti" nao eh explicitado o retorno 	TRUE
-#	2 - O que usar no lugar do "log()"					LOG MESMO	
-#	3 - deepcopy() ou reconstruir as proximas memorias 		RECONSTRUIR
 
 import sys
 import copy
@@ -239,12 +233,12 @@ class Validation():
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
 		if ret2:
-			setSACacheData(c.l1d, address, value)
+			self.setSACacheData(c.l1d, address, value)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
 		if ret3:
-			setSACacheData(c.l1d, address, value)
-			setSACacheData(c.l2, address, value)
+			self.setSACacheData(c.l1d, address, value)
+			self.setSACacheData(c.l2, address, value)
 			return 3
 
 		if address >= mmem.mainsize:
@@ -259,12 +253,12 @@ class Validation():
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
 		if ret2:
-			setSACacheData(c.l1d, address, value)
+			self.setSACacheData(c.l1d, address, value)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
 		if ret3:
-			setSACacheData(c.l1d, address, value)
-			setSACacheData(c.l2, address, value)
+			self.setSACacheData(c.l1d, address, value)
+			self.setSACacheData(c.l2, address, value)
 			return 3
 		
 		if address >= mmem.mainsize:
@@ -290,7 +284,7 @@ class Validation():
 		#	self.setSACacheLine(c.l3, address, value)
 
 	def duplicateCache(self, c):
-		return copy.deepcopy(SACache)
+		return self.createCache()
 
 	def fetchCacheData(self, c, mmem, address):
 		line = []
@@ -395,11 +389,15 @@ class Validation():
 		self.setMainMemoryData(mem.memory, address, value)
 
 	def duplicateMemory(self, mem):
-		pass
+		return self.createMemory(self.duplicateCache(mem.cache), mem.memory)
 
 	### Processor ###
 	def createProcessor(self, mem, ncores):
-		return Processor(mem, ncores)
+		mem_list = []
+		for i in range(int(ncores)):
+			mem_list.append(self.duplicateMemory(mem))
+		return Processor(mem_list, ncores)
+
 
 class TACache():
 	def __init__(self, c, l):
@@ -462,10 +460,8 @@ class Memory():
 
 class Processor():
 	def __init__(self, mem, ncores):
-		self.memory = []
+		self.memory = mem
 		self.ncores = ncores
-		for i in range(0,int(ncores)):
-			self.memory.append(mem)
 
 if __name__ == "__main__":
 	v = Validation()
@@ -506,12 +502,13 @@ if __name__ == "__main__":
 
 		resposta = v.doInstruction(ins)
 		print "ler"
-		#print processador.memory[0].memory.main[int(ins[2]/4)]
+		print processador.memory[0].memory.main[int(ins[2]/4)]
+		print processador.memory[1].memory.main[int(ins[2]/4)]
 		print "resposta"
 		print resposta
 		v.lines.remove(v.lines[0])
 
-
+	#print processador.memory[0].memory.main[int(ins[2]/4)]
 	#print processador.memory[0].cache.l1i.blocks[0].lines
 	
 '''
