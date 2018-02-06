@@ -15,7 +15,13 @@ import sys
 import copy
 import math as m
 
+class MultipleError(Exception):
+	pass
+
 class Pow2Error(Exception):
+	pass
+
+class sintaxError(Exception):
 	pass
 
 def powCheck(n):
@@ -96,6 +102,9 @@ class Validation():
 				if resp and (value == float(ins[4])):
 					return True	
 			return 0
+
+		else:
+			raise sintaxError("Invalid command: " + str(ins[0]) )
 			
 	def createOutput(self):
 		# - Descricao de toda a hierarquia de memoria, com dados de capacidade, associatividade e
@@ -477,6 +486,9 @@ class TACache():
 			raise Pow2Error("Capacity isn't a power of two")
 		if not powCheck(l):
 			raise Pow2Error("Line size isn't a power of two")
+		if (c % l) != 0:
+			raise MultipleError(str(c) + " isn't multiple of " + str(l))
+
 		self.offset_size = int(m.log(l,2))
 		#print "OFFSET ###########"
 		#print self.offset_size
@@ -499,6 +511,8 @@ class SACache():
 			raise Pow2Error("Line size isn't a power of two")
 		if not powCheck(a):
 			raise Pow2Error("Associativity isn't a power of two")
+		if (c % (l*a)) != 0:
+			raise MultipleError(str(c) + " isn't multiple of " + str(l*a))
 		self.miss = 0
 		self.hit = 0
 		self.count = 0
