@@ -67,34 +67,34 @@ class Validation():
 		# n addr level value
 		elif ins[0] == "asserti": # O indice comeca no 1?
 			if int(ins[3]) == 1:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l1i, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l1i, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true
+					return True
 
 			elif int(ins[3]) == 2:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true
+					return True
 			elif int(ins[3]) == 3:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true	
+					return True	
 			return 0
 
 		elif ins[0] == "assertd":
 			if int(ins[3]) == 1:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l1d, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l1d, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true
+					return True
 
 			elif int(ins[3]) == 2:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true
+					return True
 			elif int(ins[3]) == 3:
-				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2])):
+				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2]))
 				if resp and (value == float(ins[4])):
-					return true	
+					return True	
 			return 0
 			
 	def createOutput(self):
@@ -395,7 +395,7 @@ class Validation():
 		fa = ia + (int(c.l1i.line_size)>>2) - 1
 		for i in range(ia,fa+1):
 			line.append(copy.deepcopy(mmem.main[i]))
-		self.setSACacheLine(c.l1d, address, line)
+		self.setSACacheLine(c.l1i, address, line)
 
 		line = []
 		_offset = self.getOffset(address, c.l2.line_size)
@@ -576,8 +576,6 @@ if __name__ == "__main__":
 		ins = v.lines[0].split()
 
 		resposta = v.doInstruction(ins)
-		print "ler"
-		print "resposta"
 		print resposta
 		v.lines.remove(v.lines[0])
 
