@@ -1,32 +1,32 @@
-#Cabecalho:
-# 	tinyurl.com/ydhcvqy3
-#
+#	
+#	Cabecalho: (tinyurl.com/ydhcvqy3)
+# 	
 # 	1 - Comparacao das tags com operadores logicos 
 #	2 - FIFO para escrever ou contador
 #	3 - a = c/l
 #	4 - n = c/l*a 
 #	5 - Caches inclusivos
 #	6 - Politica de escrita: Write-through
-#
-#	TODO:
-#	1 - Arrumar retorno do setCache
 
 import sys
 import copy
 import math as m
 
+# Classe que dispara excecao para numeros nao multiplos
 class MultipleError(Exception):
 	pass
-
+# Classe que dispara excecao para numeros que nao sejam potencia de 2
 class Pow2Error(Exception):
 	pass
-
+# Classe que dispara excecao para entradas de funcoes invalidas
 class sintaxError(Exception):
 	pass
 
+# Checa se um numero eh potencia de 2
 def powCheck(n):
 	return int(m.log(n,2)) == m.log(n,2)
 
+# Classe de validacao do programa
 class Validation():
 	def __init__(self):
 		self.countL1d = 0
@@ -42,10 +42,11 @@ class Validation():
 		file.close()
 		self.lines = lines_list
 
+	# Metodo que executa as funcoes do arquivo de entrada
 	def doInstruction(self, ins):
 		for i in range(1,len(ins)):
 			ins[i] = float(ins[i])
-		print ins
+		#print ins
 		if ins[0] == "cl1d":
 			return self.createSACache(ins[1], ins[2], ins[3])
 		elif ins[0] == "cl1i":
@@ -70,7 +71,7 @@ class Validation():
 			return self.getData(processador.memory[int(ins[1])],ins[2])
 		elif ins[0] == "wd":
 			return self.setData(processador.memory[int(ins[1])],ins[2], ins[3])
-		# n addr level value
+
 		elif ins[0] == "asserti": # O indice comeca no 1?
 			if int(ins[3]) == 1:
 				resp, value = self.getSACacheData(processador.memory[n].cache.l1i, int(ins[2]))
@@ -104,16 +105,15 @@ class Validation():
 			return 0
 
 		else:
-			raise sintaxError("Invalid command: " + str(ins[0]) )
+			raise sintaxError("Invalid command: " + str(ins[0]))
 			
+	# Cria o relatorio final
 	def createOutput(self):
 		# - Descricao de toda a hierarquia de memoria, com dados de capacidade, associatividade e
 		#	tamanho de linhas de cada nivel de cache, tamanho da memoria RAM e da memoria virtual,
 		#	alem do tamanho das paginas.
 		# - Numero total de hits para cada nivel (variando de 1 a 5 conforme retorno de getData).
 		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
-		#for i in range(int(processador.ncores)):
-		#print "Processador " + str(i) + ": \n"
 		print " _________________________________________________"
 		print "|			L1d			  |" 
 		print "|_________________________________________________|"
@@ -175,7 +175,7 @@ class Validation():
 	def getTACacheLineSize(self, TACache):
 		return TACache.line_size
 
-	def getTACacheData(self, TACache, address, value):		# ELE PEDE PRA INCLUIR O VALUE, MAS NAO TA FAZENDO SENTIDO EM PYTHON
+	def getTACacheData(self, TACache, address, value):
 		_offset = self.getOffset(address, TACache.line_size)	
 		_tag = address - _offset
 		count = 0
@@ -185,24 +185,18 @@ class Validation():
 				return True, value 
 			count += 1
 		return False, value
-
 		
-	def setTACacheLine(self, TACache, address, line):		
+	def setTACacheLine(self, TACache, address, line):		#ERRO: Devia conferir se ja existe o valor na tag, porem "setTACacheLine" nao e acessivel fora da classe
 		_offset = self.getOffset(address, TACache.line_size)
 		_tag = address - _offset
-		if TACache.count != TACache.assoc:	# Usando uma fila pra armazenar as tags, conforme solicitado no documento para usar uma estrutura FIFO
+		if TACache.count != TACache.assoc:	# Usando uma lista em formato FIFO usando um contador TACache.count
 			TACache.tag[TACache.count] = _tag
 			count = 0
 			
 			for l in line:
-				#print TACache.lines
-				#print line
-				#print count
-				#print TACache.count
-
 				TACache.lines[TACache.count][count] = l
 				count += 1
-			#print TACache.lines[0]
+
 			TACache.count += 1
 		else:
 			TACache.count = 0
@@ -213,13 +207,9 @@ class Validation():
 				count += 1
 			TACache.count += 1
 
-	def setTACacheData(self, TACache, address, value): # Se retornar FALSE, devemos chamar setTACacheLine e dps chamar this denovo
+	def setTACacheData(self, TACache, address, value):
 		_offset = self.getOffset(address, TACache.line_size)
 		_tag = address - _offset
-		#print "SIZE"
-		#print TACache.line_size
-		#rint "TAG"
-		#print _tag
 		count = 0
 		for addr in TACache.tag:
 			if addr == _tag:
@@ -228,13 +218,13 @@ class Validation():
 			count += 1
 		return False
 
+	# Retorna o offset
 	def getOffset(self, address, l):	
-		#address = address>>2
 		offset = address & int(((int(l) >> 2) - 1))
 		return offset
 
+	# Retorna o Lookup
 	def getLookup(self, address, l_size, o_size):
-		#address = address>>2
 		lookup = address >> o_size
 		lookup = lookup & int(l_size-1)
 		return lookup
@@ -253,7 +243,6 @@ class Validation():
 		_lookup2 = _lookup << int(m.ceil(m.log(SACache.offset_size,2)))
 		_lookup2 += _offset
 		_tag = address - _lookup2
-		#_tag = address << int((m.ceil(m.log(SACache.lookup_size,2) + m.log(SACache.offset_size,2))))
 		value = 0
 		SACache.count = 0
 		for addr in SACache.blocks[_lookup].tag:
@@ -271,22 +260,11 @@ class Validation():
 	def setSACacheData(self, SACache, address, value):	
 		_offset = self.getOffset(address, SACache.line_size)
 		_lookup = self.getLookup(address, SACache.lookup_size, SACache.offset_size)
-		#_lookup2 = _lookup << int(m.ceil(m.log(SACache.offset_size,2)))
-		#_lookup2 += _offset
-		#_tag = address - _lookup2
 		
 		if not self.setTACacheData(SACache.blocks[_lookup], address, value):
 			return False
 		
 		return True
-
-		#for addr in SACache.blocks[_lookup].tag:
-		#	if addr == _tag:
-		#		print "ENTROU"
-		#		SACache.blocks[_lookup].lines[count][_offset] = value
-		#		return True
-		#	count += 1
-		#return False
 
 	def duplicateSACache(self, SACache):
 		pass
@@ -295,9 +273,6 @@ class Validation():
 	def createCache(self, L1d, L1i, L2, L3):
 		return Cache()
 
-	# TODO
-	# Retirar os values do cache 
-	# Usar o retorno dos Get para o value do Set
 	def getCacheData(self, c, mmem, address):
 		ret1, value = self.getSACacheData(c.l1d,address)
 		if ret1:
@@ -359,44 +334,45 @@ class Validation():
 	def setCacheData(self, c, address, value):
 		if self.setSACacheData(c.l1d, address, value):
 			self.countL1d += 1
-			print "Hit 1"
+			#print "Hit 1"
 			return 1
 
 		elif self.setSACacheData(c.l2, address, value):
 			self.countL2 += 1
-			print "Hit 2"
+			#print "Hit 2"
 			return 2
 
 		elif self.setSACacheData(c.l3, address, value):
 			self.countL3 += 1
-			print "Hit 3"
+			#print "Hit 3"
 			return 3
 
 		else: 
 			self.countMem += 1
-			print "Hit 4"
+			#print "Hit 4"
 			return 4
 
 	def setCacheInstruction(self, c, address, value):
 		if self.setSACacheData(c.l1i, address, value):
 			self.countL1d += 1
-			print "Hit 1"
+			#print "Hit 1"
 			return 1
 
 		elif self.setSACacheData(c.l2, address, value):
 			self.countL2 += 1
-			print "Hit 2"
+			#print "Hit 2"
 			return 2
 
 		elif self.setSACacheData(c.l3, address, value):
 			self.countL3 += 1
-			print "Hit 3"
+			#print "Hit 3"
 			return 3
 
 		else: 
 			self.countMem += 1
-			print "Hit 4"
+			#print "Hit 4"
 			return 4
+
 	def duplicateCache(self, c):
 		self.duplicateSACache(c.l1d)
 		self.duplicateSACache(c.l1i)
@@ -465,7 +441,7 @@ class Validation():
 	def createMainMemory(self, ramsize, vmsize):
 		return MainMemory(ramsize, vmsize)
 
-	def getMainMemoryData(self, mem, address,value): # ELE PEDE PRA INCLUIR O VALUE, MAS NAO TA FAZENDO SENTIDO EM PYTHON
+	def getMainMemoryData(self, mem, address,value):
 		if address < 0 or address > (mem.mainsize -1):
 			return -1
 
@@ -479,7 +455,6 @@ class Validation():
 			return -1
 
 		mem.main[address] = value
-	#	print mem.main[address]
 		return 4
 		
 	### Memory ###
@@ -492,7 +467,6 @@ class Validation():
 	def getInstruction(self, mem, address):
 		address = int(address)>>2
 		return self.getCacheInstruction(mem.cache, mem.memory, address)
-
 
 	def setData(self, mem, address, value):
 		address = int(address)>>2
@@ -529,12 +503,9 @@ class TACache():
 			raise MultipleError(str(c) + " isn't multiple of " + str(l))
 
 		self.offset_size = int(m.log(l,2))
-		#print "OFFSET ###########"
-		#print self.offset_size
 		self.capacity = c
 		self.line_size = l
 		self.assoc = c/l
-		#self.tag = q.Queue()	# Fila - FIFO
 		self.tag = [None]*int(c/l)
 		self.lines = []
 		aux = [None]* (int(l)>>2)
@@ -595,7 +566,7 @@ if __name__ == "__main__":
 	v = Validation()
 	ins = ''
 	for i in range(0,7):
-		print i
+		#print i
 		ins = v.lines[0].split()
 		v.lines.remove(v.lines[0])
 		if i == 0:
@@ -622,116 +593,11 @@ if __name__ == "__main__":
 			global processador
 			processador = v.doInstruction(ins)
 
-
-	#v.setInstruction(processador.memory[0], 1, 4)
-	#print processador.memory[0].memory.main
 	while len(v.lines) > 0:
 		ins = v.lines[0].split()
 
 		resposta = v.doInstruction(ins)
-		print resposta
+#		print resposta
 		v.lines.remove(v.lines[0])
 
 	v.createOutput()
-	#print processador.memory[0].memory.main[int(ins[2]/4)]
-	#print processador.memory[0].cache.l1i.blocks[0].lines
-	
-'''
-	#processador.memory[0].cache.l3.blocks[0].lines[1][1] = 1
-	#print processador.memory[0].cache.l3.blocks[0].lines
-	#processador.memory[0].cache.l1d.blocks[0].lines[1][1] = 1
-	#print processador.memory[0].cache.l1d.blocks[0].lines
-	#processador.memory[0].cache.cu = "bosta"
-	#print processador.memory[0].cache.cu
-	#print "######################"
-	#processador.memory[0].cache.cu = "bosta"
-	#print processador.memory[1].cache.cu
-	#processador.memory[1].cache.l3.blocks[0].lines[1][0] = 2
-	#print processador.memory[1].cache.l3.blocks[0].lines	
-	#processador.memory[1].cache.l1d.blocks[0].lines[0][1] = 1
-	#print processador.memory[1].cache.l1d.blocks[0].lines
-	
-
-# TA tests
-
-	ta = v.createTACache(128,32)
-	print v.getTACacheCapacity(ta)
-	print v.getTACacheLineSize(ta)
-	a,_ = v.getTACacheData(ta,12,8)
-	print a
-
-	print "####################"
-
-# SA tests
-
-	sa = v.createSACache(128,2,16)
-	print v.getSACacheCapacity(sa)
-	print v.getSACacheLineSize(sa)
-
-	a,_ = v.getSACacheData(sa,20,8)
-	print a
-
-	print sa.blocks
-
-	print sa.offset_size
-
-	print sa.lookup_size
-
-	sa2 = v.duplicateSACache(sa)
-	
-	print sa2.blocks
-
-	print sa2.offset_size
-
-	print sa2.lookup_size
-
-	print "####################"
-
-# Cache tests
-
-	cache = v.createCache(sa,sa2, v.createSACache(256, 2, 16), v.createSACache(512,4,32))
-
-# Main Memory
-
-	mem = v.createMainMemory(2048,2048)
-	print v.getMainMemoryData(mem, 533, 0)
-	print v.setMainMemoryData(mem, 53, 1)
-	a,value = v.getMainMemoryData(mem, 53, 0)
-
-
-	mmem = v.createMainMemory(128,128)
-	v.setMainMemoryData(mmem, 12, 20)
-	_,data = v.getMainMemoryData(mmem,12)
-	print data
-
-	oi = v.getLookup(50,7,2)
-	print oi
-	
-	ta = v.createTACache(512,64)
-	print ta.lines
-
-	print v.getTACacheCapacity(ta)
-	print v.getTACacheLineSize(ta)
-	v.setTACacheData(ta, 3, 4)
-	v.setTACacheData(ta, 30, 2)
-	v.setTACacheData(ta, 13, 1)
-	v.setTACacheData(ta, 22, 3)
-	v.setTACacheData(ta, 44, 5)
-	v.setTACacheData(ta, 32, 7)
-	v.setTACacheData(ta, 64, 9)
-	v.setTACacheData(ta, 16, 11)
-	v.setTACacheData(ta, 200, 13)
-	v.setTACacheData(ta, 84, 15)
-	print ta.lines
-
-	print "\n\n#########\n\n"
-
-	_, value = v.getTACacheData(ta,84)
-	print value
-	
-	print ta.tag
-	sa = v.createSACache(16,2,2)
-	print sa.blocks[1].offset_size
-	print v.getTACacheCapacity(sa.blocks[1])
-	print v.getTACacheCapacity(sa.blocks[2])
-	'''
