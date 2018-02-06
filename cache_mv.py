@@ -9,8 +9,6 @@
 #	6 - Politica de escrita: Write-through
 #
 #	TODO2:
-#	1 - Fazer o relatorio (quantidade de HIT/MISS)
-#	2 - Implementar assert
 #
 
 import sys
@@ -25,35 +23,18 @@ def powCheck(n):
 
 class Validation():
 	def __init__(self):
-		self.countL1 = 0
+		self.countL1d = 0
+		self.countL1i = 0
 		self.countL2 = 0
 		self.countL3 = 0
-		self.countMiss = 0
-		self.countHit = 0
+		self.countMem = 0
+		self.countError = 0
 		self.linhas = []
 		fileName = sys.argv[1]
 		file = open(fileName, 'r')
 		lines_list = file.readlines()
 		file.close()
 		self.lines = lines_list
-
-	def counter(self, l1i, l1d, l2):
-		self.countL1 = l1d.count
-		self.countL1 += l1i.count
-		self.countL2 = l2.count
-		self.countHit = l1d.hit
-		self.countHit += l1i.hit
-		self.countHit += l2.hit
-		self.countMiss = l1d.miss
-		self.countMiss += l1i.miss
-		self.countMiss += l2.miss
-		pass
-
-	def counterL3(self, l3):
-		self.countL3 = l3.count
-		self.countHit = l3.hit
-		self.countMiss = l3.miss
-		pass
 
 	def doInstruction(self, ins):
 		for i in range(1,len(ins)):
@@ -75,22 +56,46 @@ class Validation():
 		elif ins[0] == "cp":
 			return self.createProcessor(hier_mem, ins[1])
 		elif ins[0] == "ri":
-			# ncore & address
+		# ncore & address
 			return self.getInstruction(processador.memory[int(ins[1])],ins[2])
 		elif ins[0] == "wi":
-			print "Chamou setInstruction()"
 			return self.setInstruction(processador.memory[int(ins[1])],ins[2], ins[3])
 		elif ins[0] == "rd":
 			return self.getData(processador.memory[int(ins[1])],ins[2])
 		elif ins[0] == "wd":
-			print "Chamou setInstruction()"
 			return self.setData(processador.memory[int(ins[1])],ins[2], ins[3])
 		# n addr level value
-		elif ins[0] == "asserti":
-			pass
-		# Nao explicita como deve ser o retorno
+		elif ins[0] == "asserti": # O indice comeca no 1?
+			if int(ins[3]) == 1:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l1i, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true
+
+			elif int(ins[3]) == 2:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true
+			elif int(ins[3]) == 3:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true	
+			return 0
+
 		elif ins[0] == "assertd":
-			pass
+			if int(ins[3]) == 1:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l1d, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true
+
+			elif int(ins[3]) == 2:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l2, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true
+			elif int(ins[3]) == 3:
+				resp, value = self.getSACacheData(processador.memory[n].cache.l3, int(ins[2])):
+				if resp and (value == float(ins[4])):
+					return true	
+			return 0
 			
 	def createOutput(self):
 		# - Descricao de toda a hierarquia de memoria, com dados de capacidade, associatividade e
@@ -98,8 +103,49 @@ class Validation():
 		#	alem do tamanho das paginas.
 		# - Numero total de hits para cada nivel (variando de 1 a 5 conforme retorno de getData).
 		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
-		output = " "
-		return output
+		#for i in range(int(processador.ncores)):
+		#print "Processador " + str(i) + ": \n"
+		print "L1d: \n" 
+		print "Capacity: " + str(processador.memory[0].cache.l1d.capacity)
+		print "Associativity: " + str(processador.memory[0].cache.l1d.associativity)
+		print "Line size: " + str(processador.memory[0].cache.l1d.line_size) + "\n"
+
+		print "L1i: \n" 
+		print "Capacity: " + str(processador.memory[0].cache.l1i.capacity)
+		print "Associativity: " + str(processador.memory[0].cache.l1i.associativity)
+		print "Line size: " + str(processador.memory[0].cache.l1i.line_size) + "\n"
+
+		print "L2: \n" 
+		print "Capacity: " + str(processador.memory[0].cache.l2.capacity)
+		print "Associativity: " + str(processador.memory[0].cache.l2.associativity)
+		print "Line size: " + str(processador.memory[0].cache.l2.line_size) + "\n"
+
+		print "L3: \n" 
+		print "Capacity: " + str(processador.memory[0].cache.l3.capacity)
+		print "Associativity: " + str(processador.memory[0].cache.l3.associativity)
+		print "Line size: " + str(processador.memory[0].cache.l3.line_size) + "\n"
+
+		print "#########################################################\n"
+
+		print "RAM size: " + str(processador.memory[0].memory.ramsize) + "\n"
+
+		print "Virtual memory size: " + str(processador.memory[0].memory.vmsize) + "\n"
+
+		print "#########################################################\n"
+
+		print "HIT:\n"
+
+		print "L1d: " + str(self.countL1d)
+		print "L1i: " + str(self.countL1i)
+		print "L2: " + str(self.countL2)
+		print "L3: " + str(self.countL3) 
+		print "Memory: " + str(self.countMem) + "\n"
+		
+		print "Errors: "  + str(self.countError)
+
+
+
+
 
 	###  TACache  ###
 	def createTACache(self, c, l):
@@ -234,37 +280,47 @@ class Validation():
 		ret1, value = self.getSACacheData(c.l1d,address)
 		print value
 		if ret1:
+			self.countL1d += 1
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
 		if ret2:
-			self.setSACacheData(c.l1d, address, value)
+			self.countL2 += 1
+			if not self.setSACacheData(c.l1d, address, value):
+				self.fetchCacheData(c, mmem, address)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
 
 		if ret3:
-			if not self.setSACacheData(c.l1i, address, value):
+			self.countL3 += 1
+			if not self.setSACacheData(c.l1d, address, value):
 				self.fetchCacheData(c, mmem, address)
 			if not self.setSACacheData(c.l2, address, value):
 				self.fetchCacheData(c, mmem, address)
 			return 3
 
 		if address >= mmem.mainsize or address < 0:
+			self.countError += 1
 			return -1
 
 		self.fetchCacheData(c, mmem, address)
+		self.countMem += 1
 		return 4
 
 	def getCacheInstruction(self, c, mmem, address):
 		ret1, value = self.getSACacheData(c.l1i,address)
 		if ret1:
+			self.countL1i += 1
 			return 1
 		ret2, value = self.getSACacheData(c.l2,address)
 		if ret2:
-			self.setSACacheData(c.l1i, address, value)
+			self.countL2 += 1
+			if not self.setSACacheData(c.l1i, address, value):
+				self.fetchCacheData(c, mmem, address)
 			return 2
 		ret3, value = self.getSACacheData(c.l3,address)
 
 		if ret3:
+			self.countL3 += 1
 			if not self.setSACacheData(c.l1i, address, value):
 				self.fetchCacheData(c, mmem, address)
 			if not self.setSACacheData(c.l2, address, value):
@@ -272,9 +328,11 @@ class Validation():
 			return 3
 		
 		if address >= mmem.mainsize or address < 0:
+			self.countError += 1
 			return -1
 
 		self.fetchCacheInstruction(c, mmem, address)
+		self.countMem += 1
 		return 4
 
 	def setCacheData(self, c, address, value):
@@ -444,6 +502,7 @@ class SACache():
 		self.miss = 0
 		self.hit = 0
 		self.count = 0
+		self.associativity = a
 		self.capacity = c
 		self.line_size = l
 		self.lookup_size = c / (l * a)
@@ -461,6 +520,8 @@ class Cache():
 
 class MainMemory():
 	def __init__(self, ramsize, vmsize):
+		self.ramsize = ramsize
+		self.vmsize = vmsize
 		self.mainsize = int(ramsize + vmsize) >> 2
 		self.main = []
 		self.value = None
@@ -520,6 +581,7 @@ if __name__ == "__main__":
 		print resposta
 		v.lines.remove(v.lines[0])
 
+	v.createOutput()
 	#print processador.memory[0].memory.main[int(ins[2]/4)]
 	#print processador.memory[0].cache.l1i.blocks[0].lines
 	
