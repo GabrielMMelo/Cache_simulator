@@ -1,4 +1,4 @@
-#TODO:
+#Cabecalho:
 # 	tinyurl.com/ydhcvqy3
 #
 # 	1 - Comparacao das tags com operadores logicos 
@@ -8,8 +8,8 @@
 #	5 - Caches inclusivos
 #	6 - Politica de escrita: Write-through
 #
-#	TODO2:
-#
+#	TODO:
+#	1 - Arrumar retorno do setCache
 
 import sys
 import copy
@@ -114,25 +114,38 @@ class Validation():
 		# - Numero total de erros (dos tipos -1 ou -2 conforme retorno de getData).
 		#for i in range(int(processador.ncores)):
 		#print "Processador " + str(i) + ": \n"
-		print "L1d: \n" 
-		print "Capacity: " + str(processador.memory[0].cache.l1d.capacity)
-		print "Associativity: " + str(processador.memory[0].cache.l1d.associativity)
-		print "Line size: " + str(processador.memory[0].cache.l1d.line_size) + "\n"
+		print " _________________________________________________"
+		print "|			L1d			  |" 
+		print "|_________________________________________________|"
+		print "|Capacity		|		  " + str(processador.memory[0].cache.l1d.capacity) + " |"
+		print "|Associativity		|	  	      " + str(processador.memory[0].cache.l1d.associativity) + " |"
+		print "|Line size 		|	  	     " + str(processador.memory[0].cache.l1d.line_size) + " |"
+		print "|_______________________|_________________________| \n"
 
-		print "L1i: \n" 
-		print "Capacity: " + str(processador.memory[0].cache.l1i.capacity)
-		print "Associativity: " + str(processador.memory[0].cache.l1i.associativity)
-		print "Line size: " + str(processador.memory[0].cache.l1i.line_size) + "\n"
+		print " _________________________________________________"
+		print "|			L1i			  |" 
+		print "|_________________________________________________|"
+		print "|Capacity		|		  " + str(processador.memory[0].cache.l1i.capacity) + " |"
+		print "|Associativity		|	  	      " + str(processador.memory[0].cache.l1i.associativity) + " |"
+		print "|Line size 		|	  	     " + str(processador.memory[0].cache.l1i.line_size) + " |"
+		print "|_______________________|_________________________| \n"
 
-		print "L2: \n" 
-		print "Capacity: " + str(processador.memory[0].cache.l2.capacity)
-		print "Associativity: " + str(processador.memory[0].cache.l2.associativity)
-		print "Line size: " + str(processador.memory[0].cache.l2.line_size) + "\n"
+		print " _________________________________________________"
+		print "|			L2			  |" 
+		print "|_________________________________________________|"
+		print "|Capacity		|		 " + str(processador.memory[0].cache.l2.capacity) + " |"
+		print "|Associativity		|	  	      " + str(processador.memory[0].cache.l2.associativity) + " |"
+		print "|Line size 		|	  	     " + str(processador.memory[0].cache.l2.line_size) + " |"
+		print "|_______________________|_________________________| \n"
 
-		print "L3: \n" 
-		print "Capacity: " + str(processador.memory[0].cache.l3.capacity)
-		print "Associativity: " + str(processador.memory[0].cache.l3.associativity)
-		print "Line size: " + str(processador.memory[0].cache.l3.line_size) + "\n"
+		print " _________________________________________________"
+		print "|			L3			  |" 
+		print "|_________________________________________________|"
+		print "|Capacity		|		" + str(processador.memory[0].cache.l3.capacity) + " |"
+		print "|Associativity		|	  	     " + str(processador.memory[0].cache.l3.associativity) + " |"
+		print "|Line size 		|	  	    " + str(processador.memory[0].cache.l3.line_size) + " |"
+		print "|_______________________|_________________________| \n"
+
 
 		print "#########################################################\n"
 
@@ -151,10 +164,6 @@ class Validation():
 		print "Memory: " + str(self.countMem) + "\n"
 		
 		print "Errors: "  + str(self.countError)
-
-
-
-
 
 	###  TACache  ###
 	def createTACache(self, c, l):
@@ -207,6 +216,10 @@ class Validation():
 	def setTACacheData(self, TACache, address, value): # Se retornar FALSE, devemos chamar setTACacheLine e dps chamar this denovo
 		_offset = self.getOffset(address, TACache.line_size)
 		_tag = address - _offset
+		#print "SIZE"
+		#print TACache.line_size
+		#rint "TAG"
+		#print _tag
 		count = 0
 		for addr in TACache.tag:
 			if addr == _tag:
@@ -217,7 +230,7 @@ class Validation():
 
 	def getOffset(self, address, l):	
 		#address = address>>2
-		offset = address & int(l-49)
+		offset = address & int(((int(l) >> 2) - 1))
 		return offset
 
 	def getLookup(self, address, l_size, o_size):
@@ -287,7 +300,6 @@ class Validation():
 	# Usar o retorno dos Get para o value do Set
 	def getCacheData(self, c, mmem, address):
 		ret1, value = self.getSACacheData(c.l1d,address)
-		print value
 		if ret1:
 			self.countL1d += 1
 			return 1
@@ -345,21 +357,46 @@ class Validation():
 		return 4
 
 	def setCacheData(self, c, address, value):
-		self.setSACacheData(c.l1d, address, value)
-		#	self.setSACacheLine(c.l1d, address, value)
-		self.setSACacheData(c.l2, address, value)
-		#	self.setSACacheLine(c.l2, address, value)
-		self.setSACacheData(c.l3, address, value)
-		#	self.setSACacheLine(c.l3, address, value)
+		if self.setSACacheData(c.l1d, address, value):
+			self.countL1d += 1
+			print "Hit 1"
+			return 1
+
+		elif self.setSACacheData(c.l2, address, value):
+			self.countL2 += 1
+			print "Hit 2"
+			return 2
+
+		elif self.setSACacheData(c.l3, address, value):
+			self.countL3 += 1
+			print "Hit 3"
+			return 3
+
+		else: 
+			self.countMem += 1
+			print "Hit 4"
+			return 4
 
 	def setCacheInstruction(self, c, address, value):
-		self.setSACacheData(c.l1i, address, value)
-		#	self.setSACacheLine(c.l1i, address, value)
-		self.setSACacheData(c.l2, address, value)
-		#	self.setSACacheLine(c.l2, address, value)
-		self.setSACacheData(c.l3, address, value)
-		#	self.setSACacheLine(c.l3, address, value)
+		if self.setSACacheData(c.l1i, address, value):
+			self.countL1d += 1
+			print "Hit 1"
+			return 1
 
+		elif self.setSACacheData(c.l2, address, value):
+			self.countL2 += 1
+			print "Hit 2"
+			return 2
+
+		elif self.setSACacheData(c.l3, address, value):
+			self.countL3 += 1
+			print "Hit 3"
+			return 3
+
+		else: 
+			self.countMem += 1
+			print "Hit 4"
+			return 4
 	def duplicateCache(self, c):
 		self.duplicateSACache(c.l1d)
 		self.duplicateSACache(c.l1i)
@@ -459,15 +496,17 @@ class Validation():
 
 	def setData(self, mem, address, value):
 		address = int(address)>>2
-		print "Chamou setCacheInstruction() e setMainMemoryData()"
-		self.setCacheData(mem.cache, address, value)
 		self.setMainMemoryData(mem.memory, address, value)
+		resp = self.setCacheData(mem.cache, address, value)
+		if resp == 4 or resp == 3 or resp == 2:
+			self.fetchCacheData(mem.cache, mem.memory, address)
 
 	def setInstruction(self, mem, address, value):
 		address = int(address)>>2
-		print "Chamou setCacheInstruction() e setMainMemoryData()"
-		self.setCacheInstruction(mem.cache, address, value)
 		self.setMainMemoryData(mem.memory, address, value)
+		resp = self.setCacheInstruction(mem.cache, address, value)
+		if resp == 4 or resp == 3 or resp == 2:
+			self.fetchCacheData(mem.cache, mem.memory, address)
 
 	def duplicateMemory(self, mem):
 		return self.createMemory(self.duplicateCache(mem.cache), mem.memory)
